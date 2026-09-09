@@ -16,6 +16,10 @@
 #include "i18n_memory_adapter.h"
 #include "str_util.h"
 #include "measure_format_impl.h"
+#include "parse_measure_int.h"
+#ifdef I18N_PRODUCT
+#include <log.h>
+#endif
 
 using namespace OHOS::I18N;
 
@@ -192,7 +196,13 @@ bool MeasureFormatImpl::InitMeasureFormat(std::string &unprocessedMeasureData)
     while (end < static_cast<int>(unprocessedMeasureData.length()) && unprocessedMeasureData[end] != PLURAL_SEP) {
         end++;
     }
-    unitCount = std::atoi(std::string(unprocessedMeasureData, 0, end).c_str());
+    std::string unitCountText(unprocessedMeasureData, 0, end);
+    if (!ParseMeasureInt(unitCountText, unitCount)) {
+#ifdef I18N_PRODUCT
+        HILOG_ERROR(HILOG_MODULE_GLOBAL, "InitMeasureFormat: invalid unitCount prefix");
+#endif
+        return false;
+    }
     int itemCount = MEASURE_BASE_ITEM_COUNT + unitCount * MEASURE_SINGLE_UNIT_COUNT;
     std::string *items = new std::string[itemCount];
     if (items == nullptr) {
